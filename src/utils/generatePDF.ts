@@ -26,6 +26,10 @@ export async function generatePDF(elementId: string, fileName: string): Promise<
     clone.style.left = '-9999px';
     clone.style.top = '0';
     
+    // Ensure the clone has proper dimensions for PDF (A4)
+    clone.style.width = '210mm';
+    clone.style.height = 'auto';
+    
     // Render the element to canvas
     const canvas = await html2canvas(clone, {
       scale: 2,

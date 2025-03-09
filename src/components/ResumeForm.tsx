@@ -28,6 +28,8 @@ const ResumeForm = () => {
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
+      // Save current state to localStorage before navigation
+      localStorage.setItem('resumeState', JSON.stringify(state));
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -35,6 +37,8 @@ const ResumeForm = () => {
 
   const handlePrevious = () => {
     if (currentStep > 0) {
+      // Save current state to localStorage before navigation
+      localStorage.setItem('resumeState', JSON.stringify(state));
       setCurrentStep(currentStep - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

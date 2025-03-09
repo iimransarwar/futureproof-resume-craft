@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useReducer, useState } from 'react';
+import React, { createContext, useContext, useReducer, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define resume types
@@ -113,68 +113,106 @@ const ResumeContext = createContext<ResumeContextProps | undefined>(undefined);
 
 // Define reducer
 const resumeReducer = (state: Resume, action: ResumeAction): Resume => {
+  let newState: Resume;
+  
   switch (action.type) {
     case 'SET_TEMPLATE':
-      return { ...state, template: action.payload };
+      newState = { ...state, template: action.payload };
+      break;
     case 'SET_PERSONAL_INFO':
-      return { ...state, personalInfo: { ...state.personalInfo, ...action.payload } };
+      newState = { ...state, personalInfo: { ...state.personalInfo, ...action.payload } };
+      break;
     case 'ADD_WORK_EXPERIENCE':
-      return { ...state, workExperience: [...state.workExperience, action.payload] };
+      newState = { ...state, workExperience: [...state.workExperience, action.payload] };
+      break;
     case 'UPDATE_WORK_EXPERIENCE':
-      return {
+      newState = {
         ...state,
         workExperience: state.workExperience.map((item) =>
           item.id === action.payload.id ? action.payload : item
         ),
       };
+      break;
     case 'REMOVE_WORK_EXPERIENCE':
-      return {
+      newState = {
         ...state,
         workExperience: state.workExperience.filter((item) => item.id !== action.payload),
       };
+      break;
     case 'ADD_EDUCATION':
-      return { ...state, education: [...state.education, action.payload] };
+      newState = { ...state, education: [...state.education, action.payload] };
+      break;
     case 'UPDATE_EDUCATION':
-      return {
+      newState = {
         ...state,
         education: state.education.map((item) =>
           item.id === action.payload.id ? action.payload : item
         ),
       };
+      break;
     case 'REMOVE_EDUCATION':
-      return {
+      newState = {
         ...state,
         education: state.education.filter((item) => item.id !== action.payload),
       };
+      break;
     case 'ADD_SKILL':
-      return { ...state, skills: [...state.skills, action.payload] };
+      newState = { ...state, skills: [...state.skills, action.payload] };
+      break;
     case 'UPDATE_SKILL':
-      return {
+      newState = {
         ...state,
         skills: state.skills.map((item) => (item.id === action.payload.id ? action.payload : item)),
       };
+      break;
     case 'REMOVE_SKILL':
-      return {
+      newState = {
         ...state,
         skills: state.skills.filter((item) => item.id !== action.payload),
       };
+      break;
     case 'SET_SUMMARY':
-      return { ...state, summary: action.payload };
+      newState = { ...state, summary: action.payload };
+      break;
     case 'RESET_RESUME':
-      return { ...initialResume, id: uuidv4() };
+      newState = { ...initialResume, id: uuidv4() };
+      break;
     case 'IMPORT_RESUME':
-      return action.payload;
+      newState = action.payload;
+      break;
     default:
       return state;
   }
+  
+  // Save updated state to localStorage
+  localStorage.setItem('resumeState', JSON.stringify(newState));
+  return newState;
 };
 
 // Create provider
 export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(resumeReducer, initialResume);
+  // Try to load state from localStorage
+  const loadInitialState = (): Resume => {
+    try {
+      const savedState = localStorage.getItem('resumeState');
+      if (savedState) {
+        return JSON.parse(savedState) as Resume;
+      }
+    } catch (error) {
+      console.error('Error loading resume state from localStorage:', error);
+    }
+    return initialResume;
+  };
+
+  const [state, dispatch] = useReducer(resumeReducer, loadInitialState());
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplate>('minimal');
+  const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplate>(state.template || 'minimal');
   const [showTemplateSelector, setShowTemplateSelector] = useState(true);
+
+  // Update selected template when state.template changes
+  useEffect(() => {
+    setSelectedTemplate(state.template);
+  }, [state.template]);
 
   return (
     <ResumeContext.Provider value={{ 

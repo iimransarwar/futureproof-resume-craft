@@ -4,12 +4,21 @@ import MinimalTemplate from './resume-templates/MinimalTemplate';
 import ModernTemplate from './resume-templates/ModernTemplate';
 import ProfessionalTemplate from './resume-templates/ProfessionalTemplate';
 import CreativeTemplate from './resume-templates/CreativeTemplate';
+import { useEffect, useState } from 'react';
 
 interface ResumePreviewProps {
   resume: Resume;
 }
 
 const ResumePreview = ({ resume }: ResumePreviewProps) => {
+  // Create a state to force re-render when the resume changes
+  const [, setForceUpdate] = useState(0);
+  
+  // Force a re-render when the resume changes
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [resume]);
+
   const getTemplateComponent = (template: ResumeTemplate) => {
     switch (template) {
       case 'minimal':
