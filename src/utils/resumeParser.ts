@@ -1,5 +1,5 @@
 
-import { Resume } from '@/types/resume';
+import { Resume } from '@/contexts/ResumeContext';
 import { v4 as uuidv4 } from 'uuid';
 import * as pdfjs from 'pdfjs-dist';
 import mammoth from 'mammoth';
@@ -7,134 +7,90 @@ import mammoth from 'mammoth';
 // Set the worker source manually without trying to import it
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
-export async function parseResumeFile(file: File): Promise<Partial<Resume>> {
+export async function parseResumeFile(file: File): Promise<Resume> {
   try {
-    const fileType = file.type;
-    let text = '';
-
-    if (fileType === 'application/pdf') {
-      text = await parsePdfFile(file);
-    } else if (
-      fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      fileType === 'application/msword'
-    ) {
-      text = await parseDocFile(file);
-    } else {
-      throw new Error('Unsupported file type. Please upload a PDF or Word document.');
-    }
-
-    // Extract relevant information from the text
-    return extractResumeInfo(text);
+    const fileContent = await readFileContent(file);
+    return extractResumeData(fileContent);
   } catch (error) {
     console.error('Error parsing resume file:', error);
-    throw error;
+    throw new Error('Failed to parse resume file');
   }
 }
 
-async function parsePdfFile(file: File): Promise<string> {
+async function readFileContent(file: File): Promise<string> {
+  if (file.type === 'application/pdf') {
+    return readPdfContent(file);
+  } else if (file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    return readDocContent(file);
+  } else {
+    throw new Error('Unsupported file type');
+  }
+}
+
+async function readPdfContent(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-  
+  const pdf = await pdfjs.getDocument(arrayBuffer).promise;
   let fullText = '';
-  
+
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
     const pageText = textContent.items.map((item: any) => item.str).join(' ');
     fullText += pageText + '\n';
   }
-  
+
   return fullText;
 }
 
-async function parseDocFile(file: File): Promise<string> {
+async function readDocContent(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer });
   return result.value;
 }
 
-function extractResumeInfo(text: string): Partial<Resume> {
-  // This is a simple implementation - in a real app, you'd use more
-  // sophisticated NLP techniques to extract structured data
+function extractResumeData(content: string): Resume {
+  // This is a simplified version - in a real app, you would use NLP or other techniques
+  // to better extract structured information from the resume text.
   
-  // Find name (assume it's at the beginning, first line)
-  const lines = text.split('\n').filter(line => line.trim() !== '');
-  const possibleName = lines[0].trim();
-  const nameParts = possibleName.split(' ');
+  const nameMatch = content.match(/([A-Z][a-z]+)\s+([A-Z][a-z]+)/);
+  const emailMatch = content.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const phoneMatch = content.match(/(\+\d{1,3}\s?)?(\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4})/);
   
-  // Try to find email
-  const emailRegex = /[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-  const emailMatch = text.match(emailRegex);
-  const email = emailMatch ? emailMatch[0] : '';
+  // Simple extraction of job titles and education degrees
+  const possibleJobTitles = [
+    'Software Engineer', 'Web Developer', 'Project Manager', 'Marketing Specialist',
+    'Data Analyst', 'Product Manager', 'Designer', 'Engineer'
+  ];
   
-  // Try to find phone
-  const phoneRegex = /(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
-  const phoneMatch = text.match(phoneRegex);
-  const phone = phoneMatch ? phoneMatch[0] : '';
+  const possibleDegrees = [
+    'Bachelor', 'Master', 'PhD', 'BS', 'MS', 'BA', 'MA', 'Associate'
+  ];
   
-  // For simplicity, look for education keywords
-  const educationKeywords = ['education', 'university', 'college', 'degree', 'bachelor', 'master', 'phd'];
-  const educationLines = lines.filter(line => 
-    educationKeywords.some(keyword => line.toLowerCase().includes(keyword))
-  );
+  let profession = '';
+  for (const title of possibleJobTitles) {
+    if (content.includes(title)) {
+      profession = title;
+      break;
+    }
+  }
   
-  // Look for work experience keywords
-  const workKeywords = ['experience', 'employment', 'work history', 'job', 'position'];
-  const workLines = lines.filter(line => 
-    workKeywords.some(keyword => line.toLowerCase().includes(keyword))
-  );
-  
-  // Look for skills
-  const skillsKeywords = ['skills', 'proficiencies', 'technologies', 'tools'];
-  const skillsLines = lines.filter(line => 
-    skillsKeywords.some(keyword => line.toLowerCase().includes(keyword))
-  );
-  
-  // Create a basic resume structure with what we found
+  // Create a basic resume structure with extracted information
   return {
     id: uuidv4(),
     template: 'minimal',
     personalInfo: {
-      firstName: nameParts[0] || '',
-      lastName: nameParts.slice(1).join(' ') || '',
-      email: email,
-      phone: phone,
-      profession: '',
-      city: '',
-      province: '',
-      postalCode: '',
+      firstName: nameMatch ? nameMatch[1] : '',
+      lastName: nameMatch ? nameMatch[2] : '',
+      email: emailMatch ? emailMatch[0] : '',
+      phone: phoneMatch ? phoneMatch[0] : '',
+      profession: profession,
+      location: '',
+      website: '',
+      photoUrl: '',
     },
-    workExperience: workLines.length > 0 ? [
-      {
-        id: uuidv4(),
-        company: '',
-        position: '',
-        startDate: '',
-        endDate: '',
-        current: false,
-        description: workLines.join('\n')
-      }
-    ] : [],
-    education: educationLines.length > 0 ? [
-      {
-        id: uuidv4(),
-        school: '',
-        degree: '',
-        fieldOfStudy: '',
-        startDate: '',
-        endDate: '',
-        description: educationLines.join('\n')
-      }
-    ] : [],
-    skills: skillsLines.length > 0 ? 
-      skillsLines.join(' ').split(',')
-        .map(skill => skill.trim())
-        .filter(skill => skill.length > 0)
-        .map(skill => ({
-          id: uuidv4(),
-          name: skill,
-          level: 3
-        })) : [],
-    summary: lines.slice(1, 5).join('\n') // Take a few lines after the name for the summary
+    workExperience: [],
+    education: [],
+    skills: [],
+    summary: content.substring(0, 200) + '...' // Just use the first part as a summary for now
   };
 }

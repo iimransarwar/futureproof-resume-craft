@@ -1,114 +1,132 @@
 
 import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useResume, ResumeTemplate } from '@/contexts/ResumeContext';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ResumeTemplate } from '@/types/resume';
-import { useResume } from '@/contexts/ResumeContext';
-import { ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import MinimalTemplate from './resume-templates/MinimalTemplate';
+import ModernTemplate from './resume-templates/ModernTemplate';
+import ProfessionalTemplate from './resume-templates/ProfessionalTemplate';
+import CreativeTemplate from './resume-templates/CreativeTemplate';
 
-const templates: { id: ResumeTemplate; name: string; description: string }[] = [
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    description: 'Clean and simple design with a focus on content',
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    description: 'Traditional layout ideal for corporate positions',
-  },
-  {
-    id: 'creative',
-    name: 'Creative',
-    description: 'Bold design for creative industries',
-  },
-  {
-    id: 'modern',
-    name: 'Modern',
-    description: 'Contemporary design with a unique layout',
-  },
+const templates: Array<{ id: ResumeTemplate; name: string }> = [
+  { id: 'minimal', name: 'Minimal' },
+  { id: 'modern', name: 'Modern' },
+  { id: 'professional', name: 'Professional' },
+  { id: 'creative', name: 'Creative' },
 ];
 
-interface TemplateSelectorProps {
-  onNext: () => void;
-}
+const TemplateSelector = () => {
+  const { state, dispatch, showTemplateSelector, setShowTemplateSelector, selectedTemplate, setSelectedTemplate } = useResume();
+  const [localSelectedTemplate, setLocalSelectedTemplate] = useState<ResumeTemplate>(state.template);
 
-const TemplateSelector = ({ onNext }: TemplateSelectorProps) => {
-  const { state, dispatch } = useResume();
-  const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplate>(state.template);
-
-  const handleTemplateSelect = (template: ResumeTemplate) => {
-    setSelectedTemplate(template);
-    dispatch({ type: 'SET_TEMPLATE', payload: template });
+  const handleConfirm = () => {
+    dispatch({ type: 'SET_TEMPLATE', payload: localSelectedTemplate });
+    setSelectedTemplate(localSelectedTemplate);
+    setShowTemplateSelector(false);
   };
 
-  const handleNext = () => {
-    onNext();
+  const getTemplatePreview = (templateId: ResumeTemplate) => {
+    const previewResume = {
+      ...state,
+      template: templateId,
+      personalInfo: {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        phone: '(123) 456-7890',
+        profession: 'Software Engineer',
+        location: 'New York, NY',
+        website: 'johndoe.com'
+      },
+      workExperience: [
+        {
+          id: '1',
+          company: 'Tech Company Inc.',
+          position: 'Senior Developer',
+          startDate: '2018-01-01',
+          endDate: '',
+          current: true,
+          description: 'Led development of multiple projects and mentored junior developers.'
+        }
+      ],
+      education: [
+        {
+          id: '1',
+          school: 'University of Technology',
+          degree: 'Bachelor of Science',
+          fieldOfStudy: 'Computer Science',
+          startDate: '2014-01-01',
+          endDate: '2018-01-01',
+          description: 'Graduated with honors'
+        }
+      ],
+      skills: [
+        { id: '1', name: 'JavaScript', level: 5 },
+        { id: '2', name: 'React', level: 4 },
+        { id: '3', name: 'Node.js', level: 4 }
+      ],
+      summary: 'Experienced software engineer with 5+ years in web development specializing in JavaScript and React.'
+    };
+
+    switch (templateId) {
+      case 'minimal':
+        return <MinimalTemplate resume={previewResume} />;
+      case 'modern':
+        return <ModernTemplate resume={previewResume} />;
+      case 'professional':
+        return <ProfessionalTemplate resume={previewResume} />;
+      case 'creative':
+        return <CreativeTemplate resume={previewResume} />;
+      default:
+        return <MinimalTemplate resume={previewResume} />;
+    }
   };
 
   return (
-    <Card className="glass-card w-full max-w-4xl mx-auto overflow-hidden animate-fade-in">
-      <CardContent className="p-8">
-        <h2 className="text-2xl font-display font-semibold text-center mb-2">
-          Choose Your Resume Style
-        </h2>
-        <p className="text-center text-muted-foreground mb-8">
-          Select a template that suits your personal style and industry
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <Dialog open={showTemplateSelector} onOpenChange={setShowTemplateSelector}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Choose a Resume Template</DialogTitle>
+          <DialogDescription>
+            Select a template that best represents your professional style.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           {templates.map((template) => (
-            <div
+            <div 
               key={template.id}
-              className={`template-card rounded-lg overflow-hidden ${
-                selectedTemplate === template.id ? 'selected' : ''
-              }`}
-              onClick={() => handleTemplateSelect(template.id)}
+              className={cn(
+                "template-card overflow-hidden rounded-lg border-2 transition-all hover:shadow-md cursor-pointer",
+                localSelectedTemplate === template.id ? "border-primary ring-2 ring-primary/20" : "border-gray-200"
+              )}
+              onClick={() => setLocalSelectedTemplate(template.id)}
             >
-              <div className="aspect-w-8 aspect-h-11 bg-muted">
-                <div className={`w-full h-full flex items-center justify-center bg-${template.id}-preview`}>
-                  <div className={`w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 p-4 flex flex-col`}>
-                    <div className="h-6 w-24 bg-primary/20 rounded mb-4"></div>
-                    <div className="flex gap-2 mb-4">
-                      <div className="h-12 w-12 bg-primary/30 rounded-full"></div>
-                      <div className="flex flex-col justify-center">
-                        <div className="h-3 w-24 bg-primary/20 rounded mb-1"></div>
-                        <div className="h-3 w-16 bg-primary/10 rounded"></div>
-                      </div>
-                    </div>
-                    <div className="h-3 w-full bg-primary/10 rounded mb-2"></div>
-                    <div className="h-3 w-full bg-primary/10 rounded mb-2"></div>
-                    <div className="h-3 w-3/4 bg-primary/10 rounded mb-4"></div>
-                    
-                    <div className="h-4 w-20 bg-primary/20 rounded mb-2"></div>
-                    <div className="h-3 w-full bg-primary/10 rounded mb-2"></div>
-                    <div className="h-3 w-full bg-primary/10 rounded mb-2"></div>
-                    <div className="h-3 w-1/2 bg-primary/10 rounded mb-4"></div>
-                    
-                    <div className="h-4 w-20 bg-primary/20 rounded mb-2"></div>
-                    <div className="h-3 w-full bg-primary/10 rounded mb-2"></div>
-                    <div className="h-3 w-3/4 bg-primary/10 rounded"></div>
-                  </div>
-                </div>
+              <div className="p-3 bg-gray-50 border-b border-gray-200">
+                <h3 className="font-medium">{template.name}</h3>
               </div>
-              <div className="p-3 bg-card">
-                <h3 className="font-medium text-sm">{template.name}</h3>
-                <p className="text-xs text-muted-foreground">{template.description}</p>
+              <div className="p-2 aspect-[3/4] overflow-hidden bg-white">
+                <div className="transform scale-[0.25] origin-top-left h-[400%] w-[400%]">
+                  {getTemplatePreview(template.id)}
+                </div>
               </div>
             </div>
           ))}
         </div>
-
-        <div className="flex justify-center">
-          <Button
-            onClick={handleNext}
-            className="group text-md px-6 py-6 h-12 hover:scale-105 transition-all"
-          >
-            Continue <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        <DialogFooter>
+          <Button onClick={handleConfirm}>
+            Select Template
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

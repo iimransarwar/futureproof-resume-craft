@@ -1,5 +1,5 @@
 
-import { Resume } from '@/types/resume';
+import { Resume } from '@/contexts/ResumeContext';
 
 interface MinimalTemplateProps {
   resume: Resume;
@@ -23,10 +23,11 @@ const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
           {personalInfo.phone && (
             <div>{personalInfo.phone}</div>
           )}
-          {(personalInfo.city || personalInfo.province) && (
-            <div>
-              {personalInfo.city}{personalInfo.city && personalInfo.province ? ', ' : ''}{personalInfo.province} {personalInfo.postalCode}
-            </div>
+          {personalInfo.location && (
+            <div>{personalInfo.location}</div>
+          )}
+          {personalInfo.website && (
+            <div>{personalInfo.website}</div>
           )}
         </div>
       </header>

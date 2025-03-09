@@ -1,7 +1,56 @@
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { Resume, ResumeTemplate, PersonalInfo, WorkExperienceItem, EducationItem, SkillItem } from '@/types/resume';
+import React, { createContext, useContext, useReducer, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+
+// Define resume types
+export type ResumeTemplate = 'minimal' | 'professional' | 'creative' | 'modern';
+
+export interface PersonalInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  profession: string;
+  location: string;
+  website?: string;
+  photoUrl?: string;
+}
+
+export interface EducationItem {
+  id: string;
+  school: string;
+  degree: string;
+  fieldOfStudy: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export interface WorkExperienceItem {
+  id: string;
+  company: string;
+  position: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+}
+
+export interface SkillItem {
+  id: string;
+  name: string;
+  level: number; // 1-5
+}
+
+export interface Resume {
+  id: string;
+  template: ResumeTemplate;
+  personalInfo: PersonalInfo;
+  workExperience: WorkExperienceItem[];
+  education: EducationItem[];
+  skills: SkillItem[];
+  summary: string;
+}
 
 // Define initial state
 const initialPersonalInfo: PersonalInfo = {
@@ -10,9 +59,8 @@ const initialPersonalInfo: PersonalInfo = {
   email: '',
   phone: '',
   profession: '',
-  city: '',
-  province: '',
-  postalCode: '',
+  location: '',
+  website: '',
   photoUrl: '',
 };
 
@@ -49,6 +97,10 @@ interface ResumeContextProps {
   dispatch: React.Dispatch<ResumeAction>;
   currentStep: number;
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  selectedTemplate: ResumeTemplate;
+  setSelectedTemplate: React.Dispatch<React.SetStateAction<ResumeTemplate>>;
+  showTemplateSelector: boolean;
+  setShowTemplateSelector: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const ResumeContext = createContext<ResumeContextProps | undefined>(undefined);
@@ -114,28 +166,21 @@ const resumeReducer = (state: Resume, action: ResumeAction): Resume => {
 // Create provider
 export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(resumeReducer, initialResume);
-  const [currentStep, setCurrentStep] = React.useState(0);
-
-  // Load from localStorage if available
-  useEffect(() => {
-    const savedResume = localStorage.getItem('resume');
-    if (savedResume) {
-      try {
-        const parsedResume = JSON.parse(savedResume);
-        dispatch({ type: 'IMPORT_RESUME', payload: parsedResume });
-      } catch (error) {
-        console.error('Failed to parse saved resume', error);
-      }
-    }
-  }, []);
-
-  // Save to localStorage on changes
-  useEffect(() => {
-    localStorage.setItem('resume', JSON.stringify(state));
-  }, [state]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplate>('minimal');
+  const [showTemplateSelector, setShowTemplateSelector] = useState(true);
 
   return (
-    <ResumeContext.Provider value={{ state, dispatch, currentStep, setCurrentStep }}>
+    <ResumeContext.Provider value={{ 
+      state, 
+      dispatch, 
+      currentStep, 
+      setCurrentStep,
+      selectedTemplate,
+      setSelectedTemplate,
+      showTemplateSelector,
+      setShowTemplateSelector
+    }}>
       {children}
     </ResumeContext.Provider>
   );
