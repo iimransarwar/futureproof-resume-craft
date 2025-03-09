@@ -11,6 +11,9 @@ export interface PersonalInfo {
   email: string;
   phone: string;
   profession: string;
+  city: string;
+  province: string;
+  postalCode: string;
   location: string;
   website?: string;
   photoUrl?: string;
@@ -59,6 +62,9 @@ const initialPersonalInfo: PersonalInfo = {
   email: '',
   phone: '',
   profession: '',
+  city: '',
+  province: '',
+  postalCode: '',
   location: '',
   website: '',
   photoUrl: '',
