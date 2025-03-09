@@ -39,7 +39,7 @@ const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
         </section>
       )}
 
-      {workExperience.length > 0 && (
+      {workExperience && workExperience.length > 0 && (
         <section className="mb-6">
           <h2 className="text-xl font-semibold border-b border-gray-200 pb-1 mb-3">Experience</h2>
           <div className="space-y-4">
@@ -65,7 +65,7 @@ const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
         </section>
       )}
 
-      {education.length > 0 && (
+      {education && education.length > 0 && (
         <section className="mb-6">
           <h2 className="text-xl font-semibold border-b border-gray-200 pb-1 mb-3">Education</h2>
           <div className="space-y-4">
@@ -89,7 +89,7 @@ const MinimalTemplate = ({ resume }: MinimalTemplateProps) => {
         </section>
       )}
 
-      {skills.length > 0 && (
+      {skills && skills.length > 0 && (
         <section>
           <h2 className="text-xl font-semibold border-b border-gray-200 pb-1 mb-3">Skills</h2>
           <div className="flex flex-wrap gap-2">

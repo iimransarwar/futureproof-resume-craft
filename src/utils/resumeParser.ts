@@ -29,7 +29,7 @@ async function readFileContent(file: File): Promise<string> {
 
 async function readPdfContent(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
   let fullText = '';
 
   for (let i = 1; i <= pdf.numPages; i++) {
@@ -84,6 +84,9 @@ function extractResumeData(content: string): Resume {
       email: emailMatch ? emailMatch[0] : '',
       phone: phoneMatch ? phoneMatch[0] : '',
       profession: profession,
+      city: '',
+      province: '',
+      postalCode: '',
       location: '',
       website: '',
       photoUrl: '',

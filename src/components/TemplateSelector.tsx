@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useResume, ResumeTemplate } from '@/contexts/ResumeContext';
 import { 
@@ -43,6 +42,9 @@ const TemplateSelector = () => {
         email: 'john.doe@example.com',
         phone: '(123) 456-7890',
         profession: 'Software Engineer',
+        city: 'New York',
+        province: 'NY',
+        postalCode: '10001',
         location: 'New York, NY',
         website: 'johndoe.com'
       },
