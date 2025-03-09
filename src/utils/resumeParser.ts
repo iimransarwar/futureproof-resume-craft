@@ -1,11 +1,7 @@
 
 import { Resume } from '@/contexts/ResumeContext';
 import { v4 as uuidv4 } from 'uuid';
-import * as pdfjs from 'pdfjs-dist';
 import mammoth from 'mammoth';
-
-// Set the worker source manually without trying to import it
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 export async function parseResumeFile(file: File): Promise<Resume> {
   try {
@@ -18,28 +14,11 @@ export async function parseResumeFile(file: File): Promise<Resume> {
 }
 
 async function readFileContent(file: File): Promise<string> {
-  if (file.type === 'application/pdf') {
-    return readPdfContent(file);
-  } else if (file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+  if (file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
     return readDocContent(file);
   } else {
-    throw new Error('Unsupported file type');
+    throw new Error('Unsupported file type. Please upload a DOC or DOCX file.');
   }
-}
-
-async function readPdfContent(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-  let fullText = '';
-
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map((item: any) => item.str).join(' ');
-    fullText += pageText + '\n';
-  }
-
-  return fullText;
 }
 
 async function readDocContent(file: File): Promise<string> {

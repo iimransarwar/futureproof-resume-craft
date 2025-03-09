@@ -15,12 +15,12 @@ const ResumeUploadCard = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedTypes = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
       
       if (allowedTypes.includes(selectedFile.type)) {
         setFile(selectedFile);
       } else {
-        toast.error('Please upload a PDF or Word document.');
+        toast.error('Please upload a Word document (.doc or .docx).');
       }
     }
   };
@@ -52,6 +52,14 @@ const ResumeUploadCard = () => {
     setFile(null);
   };
 
+  const handleBrowseClick = () => {
+    // Directly trigger the hidden file input click event
+    const fileInput = document.getElementById('resume-upload');
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
   return (
     <Card className="w-full mb-8 shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
@@ -66,20 +74,22 @@ const ResumeUploadCard = () => {
             <>
               <Upload className="h-10 w-10 text-gray-400 mb-3" />
               <p className="text-sm text-gray-500 mb-4 text-center">
-                Drag and drop your resume, or click to browse
+                Upload your resume in DOC or DOCX format
               </p>
               <input
                 type="file"
                 id="resume-upload"
                 className="hidden"
-                accept=".pdf,.doc,.docx"
+                accept=".doc,.docx"
                 onChange={handleFileChange}
               />
-              <label htmlFor="resume-upload">
-                <Button variant="outline" className="cursor-pointer">
-                  Browse Files
-                </Button>
-              </label>
+              <Button 
+                variant="outline" 
+                className="cursor-pointer"
+                onClick={handleBrowseClick}
+              >
+                Browse Files
+              </Button>
             </>
           ) : (
             <div className="w-full">
@@ -108,7 +118,7 @@ const ResumeUploadCard = () => {
           )}
         </div>
         <p className="text-xs text-gray-500 mt-4 text-center">
-          Supported formats: PDF, DOC, DOCX
+          Supported formats: DOC, DOCX
         </p>
       </CardContent>
     </Card>
