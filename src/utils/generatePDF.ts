@@ -12,49 +12,62 @@ export async function generatePDF(elementId: string, fileName: string): Promise<
       throw new Error('Element not found');
     }
 
-    // Clone the element to avoid modifying the original
+    // Create a clone of the element to avoid modifying the original
     const clone = element.cloneNode(true) as HTMLElement;
-    // Reset any transform scales to ensure proper rendering
     clone.style.transform = 'none';
-    clone.style.width = '210mm'; // A4 width
-    clone.style.height = 'auto';
-    clone.style.position = 'absolute';
-    clone.style.top = '-9999px';
-    clone.style.left = '-9999px';
     document.body.appendChild(clone);
-
+    
+    // Temporarily make the clone visible for rendering
+    const originalPosition = clone.style.position;
+    const originalLeft = clone.style.left;
+    const originalTop = clone.style.top;
+    
+    clone.style.position = 'fixed';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    
+    // Render the element to canvas
     const canvas = await html2canvas(clone, {
       scale: 2,
       useCORS: true,
       logging: false,
       allowTaint: true,
-      windowWidth: 794, // A4 width in pixels at 96 DPI
-      windowHeight: 1123, // A4 height in pixels at 96 DPI
+      backgroundColor: '#ffffff'
     });
-
+    
+    // Clean up the clone
+    clone.style.position = originalPosition;
+    clone.style.left = originalLeft;
+    clone.style.top = originalTop;
     document.body.removeChild(clone);
-
+    
+    // Get image data and create PDF
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    // A4 dimensions
     const imgWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm
+    
+    // Calculate image height proportionally
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
     // Add the image to the PDF
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    let position = 0;
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
     
     // If the content is taller than one page, add more pages
     let heightLeft = imgHeight - pageHeight;
-    let position = -pageHeight;
-    
     while (heightLeft > 0) {
-      position -= pageHeight;
+      position = heightLeft - imgHeight;
       pdf.addPage();
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
     }
-
+    
+    // Save the PDF
     pdf.save(`${fileName}.pdf`);
+    
     toast.dismiss();
     toast.success('PDF generated successfully!');
   } catch (error) {
