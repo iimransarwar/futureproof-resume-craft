@@ -76,7 +76,7 @@ const ResumeUploadCard = () => {
                 onChange={handleFileChange}
               />
               <label htmlFor="resume-upload">
-                <Button variant="outline" className="cursor-pointer" as="span">
+                <Button variant="outline" className="cursor-pointer">
                   Browse Files
                 </Button>
               </label>

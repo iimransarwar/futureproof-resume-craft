@@ -10,6 +10,8 @@ export interface PersonalInfo {
   city: string;
   province: string;
   postalCode: string;
+  location?: string;
+  website?: string;
   photoUrl?: string;
 }
 
